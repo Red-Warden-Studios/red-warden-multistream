@@ -3,6 +3,7 @@
 
     powershell -ExecutionPolicy Bypass -File tools\publish-source.ps1            # commit + tag + push
     powershell -ExecutionPolicy Bypass -File tools\publish-source.ps1 -DryRun    # stage only, show the diff
+    powershell -ExecutionPolicy Bypass -File tools\publish-source.ps1 -DocsOnly "README: ..."   # no tag
 
   The private Streaming Tools repo stays the place we develop. This exports exactly what is
   COMMITTED under red-warden-multistream/ (uncommitted edits are refused), minus what must not go
@@ -14,7 +15,8 @@
 #>
 param(
   [string]$Repo = "https://github.com/Red-Warden-Studios/red-warden-multistream.git",
-  [switch]$DryRun
+  [switch]$DryRun,
+  [string]$DocsOnly   # commit message for a docs-only push (no tag), e.g. -DocsOnly "README: clarify X"
 )
 $ErrorActionPreference = "Stop"
 $plugin = Split-Path -Parent $PSScriptRoot
@@ -47,8 +49,18 @@ git -C $clone add -A
 git -C $clone -c core.autocrlf=false status --short | Select-Object -First 200
 if ($DryRun) { Write-Host "[DRY RUN] staged in $clone - nothing pushed"; exit 0 }
 
+if ($DocsOnly) {
+  # README/docs fix between releases: commit to main, no tag (the release tag keeps pointing at the
+  # source that was actually built).
+  git -C $clone -c user.name="Red Warden Studios" -c user.email="support@redwardenstudios.com" commit -q -m $DocsOnly
+  if ($LASTEXITCODE -ne 0) { Fail "commit failed (nothing changed?)" }
+  git -C $clone push -q origin main
+  if ($LASTEXITCODE -ne 0) { Fail "push failed" }
+  Write-Host "[OK] Pushed docs update to $Repo (no tag)"
+  exit 0
+}
 $tag = "v$version"
-if (git -C $clone tag --list $tag) { Fail "Tag $tag already exists in the public repo. Bump the version." }
+if (git -C $clone tag --list $tag) { Fail "Tag $tag already exists in the public repo. Bump the version, or use -DocsOnly." }
 git -C $clone -c user.name="Red Warden Studios" -c user.email="support@redwardenstudios.com" commit -q -m "Red Warden Multistream $version"
 if ($LASTEXITCODE -ne 0) { Fail "commit failed (nothing changed?)" }
 git -C $clone branch -M main

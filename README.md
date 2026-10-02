@@ -10,14 +10,14 @@ A free, open-source OBS Studio plugin by [Red Warden Studios](https://redwardens
 
 ## What it does
 
-- **One button.** Switch a destination on and it goes live when you press Start Streaming in OBS, and stops when you stop. No second app, no second Go Live.
-- **Share OBS's encoder, or give a platform its own.** Shared costs no extra CPU or GPU. A separate encoder lets one platform get a different bitrate, resolution or encoder. Audio matches OBS's own stream unless you choose otherwise.
-- **Know if your connection can carry it.** The dock shows total upload against your connection (measure it with a built-in speed test or type it in) and warns before you run out of headroom.
+- **One button.** Switch a destination on and it starts when you press Start Streaming in OBS, and stops when you stop. No second app, no second Go Live.
+- **Share OBS's encoder, or give a platform its own.** Shared adds no extra encoding: OBS encodes once and every platform gets it. A separate encoder lets one platform get a different bitrate, resolution or encoder; its audio starts out matching OBS's bitrate and track.
+- **Know if your connection can carry it.** The dock shows total upload against your connection (measure it with a built-in speed test while offline, or type it in) and warns before you run out of headroom.
 - **Platform advice from OBS's own data.** Bitrate, resolution and keyframe limits come from the service list OBS ships. Nothing is guessed.
-- **Protects your accounts.** Every destination has a connection budget (at most 12 attempts in any 10 minutes, 40 in an hour), so the plugin can never hammer a platform's servers. A dropped connection reconnects quickly (5 s, 10 s, 20 s, 40 s, then every minute). A rejected stream key or a broken server URL is never retried: the card tells you to fix it.
+- **Protects your accounts.** Every destination has a connection budget (at most 12 attempts in any 10 minutes, 40 in an hour, counting every attempt the plugin makes), so it can't hammer a platform's servers. A dropped connection reconnects quickly (roughly 5 s, 10 s, 20 s, 40 s, then every minute, jittered and always inside the budget). A rejected stream key or a broken server URL is never retried automatically: the card tells you to fix it.
 - **Notices a stuck connection.** An output that stays connected but stops sending data is restarted.
-- **End-of-stream report.** How long each platform was live, every drop and recovery, how much was sent. Saved, and copyable.
-- **Moving from another plugin?** Imports your destinations from obs-multi-rtmp and Aitum Multistream.
+- **End-of-stream report.** How long each platform was live, every drop and recovery, how much was sent. The last 50 are saved, and copyable.
+- **Moving from another plugin?** Imports your destinations from obs-multi-rtmp and Aitum Multistream, with the settings it can read.
 - **Test Twitch without going live.** Uses Twitch's bandwidth-test mode.
 - **Hotkeys, Stream Deck, automation.** A hotkey per destination plus all-on and all-off (bind them to Stream Deck keys), and an obs-websocket API for Streamer.bot, Touch Portal, SAMMI and scripts.
 - **Stream keys stay secret.** Keys live in Windows Credential Manager, never in a config file, and the plugin refuses a server URL that contains your key (OBS writes server URLs to its log).
@@ -32,7 +32,7 @@ A free, open-source OBS Studio plugin by [Red Warden Studios](https://redwardens
 
 Close OBS, run `red-warden-multistream-<version>-windows-x64-setup.exe`, then open **Docks > Red Warden Multistream**.
 
-To upgrade, run the newer installer the same way: it replaces the plugin in place and keeps your destinations and keys. To remove it: **Settings > Apps > Installed apps > Red Warden Multistream (OBS plugin)**.
+To upgrade, run the newer installer the same way: it replaces the plugin in place and keeps your destinations and keys. To remove it: **Settings > Apps > Installed apps > Red Warden Multistream (OBS plugin)**; your destinations and keys stay, in case you reinstall. (Removing a destination in the dock deletes its saved key.)
 
 Prefer no installer? Copy the `rws-multistream` folder from the zip into `C:\ProgramData\obs-studio\plugins\`.
 
@@ -41,7 +41,7 @@ Prefer no installer? Copy the `rws-multistream` folder from the zip into `C:\Pro
 No telemetry, no account. The plugin only connects to:
 
 - the streaming servers you add;
-- `speed.cloudflare.com`, only when you run the upload test;
+- `speed.cloudflare.com`, only when you run the upload test (throwaway test data);
 - `redwardenstudios.com/updates/multistream.json`, once per OBS start, to look for an update (a plain request whose User-Agent names the plugin version). Turn it off in the dock's **...** menu.
 
 ## obs-websocket API
