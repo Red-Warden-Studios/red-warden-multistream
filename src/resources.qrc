@@ -1,0 +1,8 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/rws-multistream">
+    <file alias="logo-32.png">../brand/logo-32.png</file>
+    <file alias="logo-64.png">../brand/logo-64.png</file>
+    <file alias="logo-128.png">../brand/logo-128.png</file>
+  </qresource>
+</RCC>
