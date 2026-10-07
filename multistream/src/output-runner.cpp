@@ -7,6 +7,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 #include "output-runner.hpp"
 #include "obs-audio.hpp"
 #include "platforms.hpp"
+#include "server-url.hpp"
 
 #include <obs-frontend-api.h>
 #include <obs-module.h>
@@ -21,7 +22,7 @@ namespace {
 // it keeps retrying even when the server rejects the key. Instead a dropped
 // connection ends the output with OBS_OUTPUT_DISCONNECTED and the dock reconnects
 // through startOne(), so every attempt passes RetryGovernor and every failure is
-// classified (a rejected key is never retried). Codex review, 2026-10-02.
+// classified (a rejected key is never retried).
 // A live output that sends nothing for this long is treated as stalled.
 constexpr qint64 kStallMs = 6000;
 // Before the first frame: allow for a long keyframe interval on OBS's side.
@@ -122,8 +123,7 @@ bool OutputRunner::start(const Destination &d, const QString &key, QString *erro
 			return fail(QStringLiteral("Invalid server URL: it needs to look like rtmp://host/app"));
 		// OBS logs the server URL. Never send one carrying credentials or the key
 		// (e.g. from an imported config); make the user fix it in Edit instead.
-		const QString decoded = QUrl::fromPercentEncoding(server.toUtf8());
-		if (!u.userInfo().isEmpty() || (key.size() >= 8 && (server.contains(key) || decoded.contains(key))))
+		if (!u.userInfo().isEmpty() || serverUrlContainsKey(server, key))
 			return fail(QStringLiteral("The server URL contains a password or the stream key; "
 						   "put only the server in it (Edit)"));
 	}

@@ -8,7 +8,7 @@
   C:\ProgramData, no admin, its own AppId, a TEST-ONLY legacy AppId, never signs) and checks, silently:
     - static: the release .iss uses the same legacy AppId as Multistream's own installer
     - legacy removal fails closed: a stale legacy entry that cannot be uninstalled aborts, installs nothing
-    - OBS-running block: a PORTABLE OBS (red-warden-preflight\.testbed\obs, captured PID, stopped in finally)
+    - OBS-running block: a PORTABLE OBS (<preflight folder>\.testbed\obs, captured PID, stopped in finally)
       makes the installer refuse with a non-zero exit and install nothing
     - component sets: preflight only; both; multistream only removes Pre-Flight's files but not a user's
       own file in its folder; folders are removed when empty
@@ -31,18 +31,26 @@ function Check($cond, $msg) {
   if ($cond) { Say "PASS: $msg" } else { Say "FAIL: $msg"; $script:fails++ }
 }
 
-$projects = Split-Path -Parent $root
+# Plugin folders: multistream\ + preflight\ inside this repo (public layout) when both exist, else the
+# sibling red-warden-multistream + red-warden-preflight folders (development layout).
+if ((Test-Path (Join-Path $root "multistream")) -and (Test-Path (Join-Path $root "preflight"))) {
+  $ms = Join-Path $root "multistream"; $pf = Join-Path $root "preflight"
+} else {
+  $projects = Split-Path -Parent $root
+  $ms = Join-Path $projects "red-warden-multistream"; $pf = Join-Path $projects "red-warden-preflight"
+}
+$msLogo = Join-Path $ms "brand\logo.ico"
 $testRoot = Join-Path $bed "root"
 $stage = Join-Path $root "staging"
 $iscc = Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
-$version = "1.0.0"
+$version = "1.0.1"
 $testSetup = Join-Path $bed "RedWardenStreamKit-$version-TestRoot-Setup.exe"
 $tmp = Join-Path $env:TEMP ("rws-kit-test-" + [guid]::NewGuid().ToString("N"))   # unique per run; only this folder is deleted
 $fakeSetup = Join-Path $tmp "fake-legacy-setup.exe"
 $uninstallBase = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall"
 $legacyKey = "$uninstallBase\RWS-KIT-TESTLEGACY-DA4CA68C_is1"
 $kitKey = "$uninstallBase\RWS-KIT-TESTROOT-035D8EC0_is1"
-$obsExeDir = Join-Path $projects "red-warden-preflight\.testbed\obs\bin\64bit"
+$obsExeDir = Join-Path $pf ".testbed\obs\bin\64bit"
 
 $msDll = Join-Path $testRoot "rws-multistream\bin\64bit\rws-multistream.dll"
 $pfDll = Join-Path $testRoot "rws-preflight\bin\64bit\rws-preflight.dll"
@@ -96,21 +104,26 @@ try {
 
   # --- Static: the release script uses Multistream's real legacy AppId ---
   $iss = Get-Content (Join-Path $root "installer\stream-kit.iss") -Raw
-  $msIss = Get-Content (Join-Path $projects "red-warden-multistream\installer\rws-multistream.iss") -Raw
-  $realId = if ($msIss -match 'AppId=\{\{([0-9A-Fa-f-]+)\}') { $Matches[1] } else { "" }
-  Check ($realId.Length -gt 30) "found Multistream's own AppId ($realId)"
+  $msIssPath = Join-Path $ms "installer\rws-multistream.iss"
   $branches = $iss -split '(?m)^#else\s*$'
-  Check ($branches[1] -match [regex]::Escape('#define LegacyAppId "{' + $realId + '}"')) "release build: LegacyAppId is Multistream's real AppId"
+  if (Test-Path $msIssPath) {
+    $msIss = Get-Content $msIssPath -Raw
+    $realId = if ($msIss -match 'AppId=\{\{([0-9A-Fa-f-]+)\}') { $Matches[1] } else { "" }
+    Check ($realId.Length -gt 30) "found Multistream's own AppId ($realId)"
+    Check ($branches[1] -match [regex]::Escape('#define LegacyAppId "{' + $realId + '}"')) "release build: LegacyAppId is Multistream's real AppId"
+  } else {
+    Say "SKIP: legacy installer script not present in this layout (static AppId check)"
+  }
   Check ($branches[0] -match 'LegacyAppId "RWS-KIT-TESTLEGACY') "TestRoot build: LegacyAppId is the test-only id"
 
   # --- Compile the TestRoot installer and the fake legacy installer ---
   ResetRoot
   Remove-Item $testSetup -ErrorAction SilentlyContinue
-  & $iscc "/DAppVersion=$version" "/DStage=$stage" "/DNoSign" "/DTestRoot=$testRoot" "/Q" "installer\stream-kit.iss"
+  & $iscc "/DAppVersion=$version" "/DStage=$stage" "/DNoSign" "/DMsLogo=$msLogo" "/DTestRoot=$testRoot" "/Q" "installer\stream-kit.iss"
   Check ($LASTEXITCODE -eq 0 -and (Test-Path $testSetup)) "ISCC compiled the TestRoot installer"
   if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
   New-Item -ItemType Directory -Force $tmp | Out-Null
-  & $iscc "/DTestRoot=$testRoot" "/O$tmp" "/Q" "tools\test-fake-legacy.iss"
+  & $iscc "/DMsLogo=$msLogo" "/DTestRoot=$testRoot" "/O$tmp" "/Q" "tools\test-fake-legacy.iss"
   Check ($LASTEXITCODE -eq 0 -and (Test-Path $fakeSetup)) "ISCC compiled the fake legacy installer (into %TEMP%)"
   if (!(Test-Path $testSetup) -or !(Test-Path $fakeSetup)) { throw "could not compile the installers" }
 

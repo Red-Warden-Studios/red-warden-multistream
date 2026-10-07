@@ -5,10 +5,12 @@
     powershell -ExecutionPolicy Bypass -File tools\package.ps1 -NoSign    # dry run, unsigned
 
   Builds NOTHING. It takes each plugin's existing RelWithDebInfo DLL, locale and PDB, and refuses
-  unless each plugin's tests passed against that exact DLL:
-    Multistream: the same gate as its own tools\package.ps1 (all unit tests exit 0, and the
-                 import/local/resilience/bandwidth harnesses say RESULT: PASS, all newer than the DLL).
-    Pre-Flight : .testbed\run-done.txt first line is OK, and the file is newer than the DLL.
+  unless each plugin's tests passed against that exact DLL, as judged by tools\check-test-results.ps1:
+    Multistream: all 6 unit tests exit 0 in run-unit.txt, and the import/local/resilience/bandwidth
+                 harness files say RESULT: PASS.
+    Pre-Flight : all 4 unit tests exit 0 in run-unit.txt, and the load/state/ui/integration harness
+                 files have PASS as their first line.
+    Every one of those files must be newer than the DLL. run-done.txt is not trusted.
   Output in dist\: RedWardenStreamKit-<ver>-Setup.exe, RedWardenStreamKit-<ver>.zip, SHA256SUMS.txt,
   symbols\ (the PDBs, for our own crash symbolication; NOT shipped). Staging lives in staging\.
 
@@ -24,10 +26,16 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
-$kitVersion = "1.0.0"
-$projects = Split-Path -Parent $root
-$ms = Join-Path $projects "red-warden-multistream"
-$pf = Join-Path $projects "red-warden-preflight"
+$kitVersion = "1.0.1"
+# Plugin folders: multistream\ + preflight\ inside this repo (public layout) when both exist, else the
+# sibling red-warden-multistream + red-warden-preflight folders (development layout).
+if ((Test-Path (Join-Path $root "multistream")) -and (Test-Path (Join-Path $root "preflight"))) {
+  $ms = Join-Path $root "multistream"; $pf = Join-Path $root "preflight"
+} else {
+  $projects = Split-Path -Parent $root
+  $ms = Join-Path $projects "red-warden-multistream"; $pf = Join-Path $projects "red-warden-preflight"
+}
+$msLogo = Join-Path $ms "brand\logo.ico"
 $dist = Join-Path $root "dist"
 $stage = Join-Path $root "staging"
 $iscc = Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
@@ -43,7 +51,7 @@ function Spec($dir) { Get-Content (Join-Path $dir "buildspec.json") -Raw | Conve
 # --- Gates: refuse to package anything we can't stand behind --------------------------------------
 if (!(Test-Path $iscc)) { Fail "Inno Setup not found at $iscc (winget install JRSoftware.InnoSetup --scope user)" }
 foreach ($f in "LICENSE", "NOTICE.txt", "installer\stream-kit.iss", "installer\stream-kit.json") { if (!(Test-Path (Join-Path $root $f))) { Fail "Missing $f" } }
-if (!(Test-Path (Join-Path $ms "brand\logo.ico"))) { Fail "Missing Multistream brand\logo.ico" }
+if (!(Test-Path $msLogo)) { Fail "Missing Multistream brand\logo.ico" }
 
 $manifest = Get-Content (Join-Path $root "installer\stream-kit.json") -Raw | ConvertFrom-Json
 if ($manifest.latest -ne $kitVersion) { Fail "installer\stream-kit.json says latest '$($manifest.latest)', this script packages $kitVersion" }
@@ -75,36 +83,13 @@ foreach ($x in @(@($msDll, $ms), @($pfDll, $pf))) {
   if ($newer) { Fail "$($newer.FullName) (modified $($newer.LastWriteTime)) is newer than $($x[0]) (built $dllTime). Rebuild and re-run that plugin's tests." }
 }
 
-# Multistream: its own gate, verbatim in spirit (tools\package.ps1 of red-warden-multistream).
-$unit = Join-Path $ms ".testbed\run-unit.txt"
-if (!(Test-Path $unit) -or (Get-Item $unit).LastWriteTime -lt (Get-Item $msDll).LastWriteTime) {
-  Fail "Multistream: no unit-test run newer than its DLL. Run its tools\run-all.ps1 first."
-}
-$expected = "rws-multistream-tests", "rws-multistream-importers-test", "rws-multistream-session-test",
-            "rws-multistream-limits-test", "rws-multistream-update-test"
-$exits = @{}; $cur = $null
-# The test exes write UTF-16, so the appended ASCII lines can carry a stray NUL: strip it first.
-foreach ($raw in Get-Content $unit) {
-  $l = $raw -replace '\x00', ''
-  if ($l -match '^== (\S+)') { $cur = $Matches[1] }
-  elseif ($l -match '^exit=(-?\d+)' -and $cur) { $exits[$cur] = [int]$Matches[1]; $cur = $null }
-}
-foreach ($t in $expected) {
-  if (!$exits.ContainsKey($t)) { Fail "Multistream: unit test $t did not run ($unit)" }
-  if ($exits[$t] -ne 0) { Fail "Multistream: unit test $t exited $($exits[$t]) ($unit)" }
-}
-foreach ($h in "import", "local", "resilience", "bandwidth") {
-  $f = Join-Path $ms ".testbed\run-$h.txt"
-  if (!(Test-Path $f) -or (Get-Item $f).LastWriteTime -lt (Get-Item $msDll).LastWriteTime) { Fail "Multistream: no $h test run newer than its DLL" }
-  if (!(Select-String -Path $f -Pattern 'RESULT: PASS' -Quiet)) { Fail "Multistream: $h test did not pass ($f)" }
-}
-
-# Pre-Flight: run-done.txt first line OK, newer than the DLL.
-$done = Join-Path $pf ".testbed\run-done.txt"
-if (!(Test-Path $done)) { Fail "Pre-Flight: no .testbed\run-done.txt. Run its tools\run-all.ps1 first." }
-if ((Get-Item $done).LastWriteTime -lt (Get-Item $pfDll).LastWriteTime) { Fail "Pre-Flight: run-done.txt is older than the DLL. Re-run its tools\run-all.ps1." }
-$first = (Get-Content $done -TotalCount 1)
-if ($first -ne "OK") { Fail "Pre-Flight: run-done.txt first line is '$first', not OK" }
+# Test gate, both plugins: tools\check-test-results.ps1 requires every named unit test to exit 0 and
+# every harness to pass, each result file newer than the DLL. run-done.txt is not consulted.
+$checker = Join-Path $PSScriptRoot "check-test-results.ps1"
+& powershell -NoProfile -ExecutionPolicy Bypass -File $checker -Plugin multistream -PluginDir $ms -Dll $msDll
+if ($LASTEXITCODE -ne 0) { Fail "Multistream tests did not all pass against its DLL (see above)" }
+& powershell -NoProfile -ExecutionPolicy Bypass -File $checker -Plugin preflight -PluginDir $pf -Dll $pfDll
+if ($LASTEXITCODE -ne 0) { Fail "Pre-Flight tests did not all pass against its DLL (see above)" }
 
 if (!$NoSign) {
   if (!$signtool) { Fail "signtool.exe not found (Windows SDK)" }
@@ -180,7 +165,7 @@ Compress-Archive -Path (Join-Path $zipStage "*") -DestinationPath $zip
 Remove-Item -Recurse -Force $zipStage
 
 # --- Installer ------------------------------------------------------------------------------------
-$isccArgs = @("/DAppVersion=$kitVersion", "/DStage=$stage", "/Q")
+$isccArgs = @("/DAppVersion=$kitVersion", "/DStage=$stage", "/DMsLogo=$msLogo", "/Q")
 # Every quote inside the sign command is Inno's $q token, never a literal ": Windows PowerShell 5.1
 # mangles embedded quotes in native arguments, and the signtool path has spaces. ($f arrives quoted.)
 if ($NoSign) { $isccArgs += "/DNoSign" }

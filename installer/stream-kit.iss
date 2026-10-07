@@ -21,6 +21,10 @@
   #error Stage must be passed: /DStage=<folder holding rws-multistream\ and rws-preflight\>
 #endif
 
+#ifndef MsLogo
+  #define MsLogo "..\..\red-warden-multistream\brand\logo.ico"
+#endif
+
 #ifdef TestRoot
   #define PluginRoot TestRoot
   #define LegacyAppId "RWS-KIT-TESTLEGACY-DA4CA68C"
@@ -61,7 +65,7 @@ DisableProgramGroupPage=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile=..\LICENSE
-SetupIconFile=..\..\red-warden-multistream\brand\logo.ico
+SetupIconFile={#MsLogo}
 UninstallDisplayIcon={app}\logo.ico
 UninstallDisplayName=Red Warden Stream Kit (OBS plugins)
 #ifdef TestRoot
@@ -95,7 +99,7 @@ Source: "{#Stage}\rws-preflight\bin\64bit\rws-preflight.dll"; DestDir: "{#Plugin
 Source: "{#Stage}\rws-preflight\data\*"; DestDir: "{#PluginRoot}\rws-preflight\data"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: preflight
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\NOTICE.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\red-warden-multistream\brand\logo.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MsLogo}"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]
 ; Never a whole-directory delete: a user's own files in a plugin folder must survive. Remove exactly

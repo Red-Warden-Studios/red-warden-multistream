@@ -84,7 +84,7 @@ int main()
 	      "bad min_obs ignored, not trusted");
 
 	// --- Red Warden Stream Kit: one shared manifest, one notice owner ---
-	CHECK(std::string(kKitVersion) == "1.0.0", "kit version is 1.0.0 (both plugins must agree)");
+	CHECK(std::string(kKitVersion) == "1.0.1", "kit version is 1.0.1 (both plugins must agree)");
 	CHECK(kitManifestUrl() == "https://redwardenstudios.com/updates/stream-kit.json", "kit manifest URL is stream-kit.json");
 	CHECK(defaultPage() == "https://redwardenstudios.com/division/bastion/stream-kit/", "default page is the Stream Kit page");
 	CHECK(parseManifest(R"({"latest":"1.0.1","url":"https://evil.example.com/"})", &m) &&
@@ -93,8 +93,8 @@ int main()
 	CHECK(parseManifest(R"({"latest":"1.0.0","url":"https://redwardenstudios.com/division/bastion/stream-kit/"})", &m) &&
 		      m.url == "https://redwardenstudios.com/division/bastion/stream-kit/",
 	      "Stream Kit url kept");
-	CHECK(compareVersions("1.0.0", kKitVersion) == 0, "latest == kit version: no notice");
-	CHECK(compareVersions("1.0.1", kKitVersion) > 0, "latest newer than kit version: notice");
+	CHECK(compareVersions("1.0.1", kKitVersion) == 0, "latest == kit version: no notice");
+	CHECK(compareVersions("1.0.2", kKitVersion) > 0, "latest newer than kit version: notice");
 	CHECK(compareVersions("0.9.0", kKitVersion) < 0, "latest older than kit version: no notice");
 	CHECK(shouldShowKitNotice(true, true) == true, "Multistream, Multistream loaded (itself): shows the notice");
 	CHECK(shouldShowKitNotice(true, false) == true, "Multistream always owns the notice");

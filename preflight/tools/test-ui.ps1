@@ -1,5 +1,5 @@
 <#
-  Red Warden Pre-Flight UI test (slice 3b: dock UI + settings dialog).
+  Red Warden Pre-Flight UI test (dock UI + settings dialog).
 
   Same portable OBS copy and throwaway scene collection / settings as test-state.ps1 (.testbed\obs),
   plus two custom checklist items. Sets RWS_PREFLIGHT_TEST=1,

@@ -42,7 +42,7 @@ No telemetry, no account. The plugin only connects to:
 
 - the streaming servers you add;
 - `speed.cloudflare.com`, only when you run the upload test (throwaway test data);
-- `redwardenstudios.com/updates/multistream.json`, once per OBS start, to look for an update (a plain request whose User-Agent names the plugin version). Turn it off in the dock's **...** menu.
+- `redwardenstudios.com/updates/stream-kit.json`, once per OBS start, to look for an update (a plain request whose User-Agent names the plugin version). Turn it off in the dock's **...** menu.
 
 ## obs-websocket API
 

@@ -39,7 +39,7 @@ turned off in each tool's settings.
 - `multistream/` - Red Warden Multistream (OBS plugin source).
 - `preflight/` - Red Warden Pre-Flight (OBS plugin source).
 - `installer/` - the Kit installer (Inno Setup script) and the update-notice file.
-- `tools/` - packaging and installer test scripts, and the script that publishes this repository.
+- `tools/` - the installer packaging script, its test gate, and installer tests.
 
 Releases are tagged `kit-v<version>`. The source for every binary in a release is the tagged commit.
 
@@ -60,11 +60,9 @@ Each plugin folder has its own README with details and its test scripts.
 
 `tools\package.ps1` builds nothing: it packages the existing RelWithDebInfo builds of both plugins
 and refuses unless each plugin's tests passed against that exact DLL. `-NoSign` makes an unsigned
-dry run. `tools\test-installer.ps1` checks the installer end to end in a scratch folder. These
-scripts and `installer\stream-kit.iss` were written for our development layout, where the plugins
-sit beside the Kit as `red-warden-multistream\` and `red-warden-preflight\`; in this repository they
-are `multistream\` and `preflight\`, so adjust those paths if you want to build the installer here.
-The plugins themselves build as described above.
+dry run. `tools\test-installer.ps1` checks the installer end to end in a scratch folder. The
+scripts work from this repository's layout (`multistream\` and `preflight\`) once both plugins are
+built and tested. The plugins themselves build as described above.
 
 ## License
 

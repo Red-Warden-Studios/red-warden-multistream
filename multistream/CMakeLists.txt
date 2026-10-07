@@ -78,6 +78,8 @@ target_sources(
     src/update-manifest.cpp
     src/update-manifest.hpp
     src/connection-budget.hpp
+    src/server-url.cpp
+    src/server-url.hpp
 )
 
 # Unit tests for the pure logic (no OBS, no Qt). Run: build_x64\<config>\rws-multistream-tests.exe
@@ -107,6 +109,10 @@ if(BUILD_MULTISTREAM_TESTS)
   add_executable(rws-multistream-update-test tests/update-check-test.cpp src/update-manifest.cpp)
   target_include_directories(rws-multistream-update-test PRIVATE src)
   target_link_libraries(rws-multistream-update-test PRIVATE Qt6::Core)
+
+  add_executable(rws-multistream-serverurl-test tests/server-url-test.cpp src/server-url.cpp)
+  target_include_directories(rws-multistream-serverurl-test PRIVATE src)
+  target_link_libraries(rws-multistream-serverurl-test PRIVATE Qt6::Core)
 endif()
 
 if(WIN32)

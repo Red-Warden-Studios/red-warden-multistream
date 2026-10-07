@@ -1,10 +1,12 @@
 param([string[]]$Steps = @("build", "unit", "load", "state", "ui", "integration"))
-# Configures, builds and runs every test; results land in .testbed\run-*.txt. Start it detached so it
-# outlives the 60 s bridge limit:
+# Configures, builds and runs every test; results land in .testbed\run-*.txt. It takes several
+# minutes, so run it in the background (add -WindowStyle Hidden to keep it off screen):
 #   Start-Process powershell -ArgumentList '-ExecutionPolicy','Bypass','-File','tools\run-all.ps1','-Steps','configure,build,unit,load,state,ui,integration' -WorkingDirectory <preflight dir>
 # Default steps (no -Steps): build, unit, load, state, ui, integration ("configure" only when CMake files changed).
 # run-done.txt: first line "OK" only if every step exited 0, else "FAILED at <step> exit=<n>"
 # (configure/build stop the run) or "FAILED: <steps>" (unit/load). All result files are ASCII.
+# A -Steps subset runs only those steps, so its "OK" means OK for that subset only, not for the whole suite.
+# The release packager reads each test's own result file (run-unit.txt, run-<harness>.txt), not run-done.txt.
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 $bed = Join-Path $root ".testbed"

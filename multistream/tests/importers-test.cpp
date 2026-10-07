@@ -67,7 +67,7 @@ int main()
 		CHECK(m[3].name == "live.twitch.tv" && m[3].platform == "twitch", "unnamed target named after its host");
 	}
 	CHECK(parseMultiRtmp(QByteArray("{\"targets\":[],\"video_configs\":[],\"audio_configs\":[]}")).empty(),
-	      "empty obs-multi-rtmp file (Andrew's real one) yields nothing");
+	      "empty obs-multi-rtmp file (no targets) yields nothing");
 	CHECK(parseMultiRtmp(QByteArray("not json")).empty(), "garbage file yields nothing, no crash");
 
 	const auto a = parseAitum(QByteArray(kAitum), QStringLiteral("RedWardenCDR"));

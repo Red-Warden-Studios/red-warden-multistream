@@ -1,5 +1,5 @@
 <#
-  Red Warden Pre-Flight state test (slice 3a: OBS probe + controller).
+  Red Warden Pre-Flight state test (OBS probe + controller).
 
   Touches none of your real OBS. Same portable copy as test-load.ps1 (.testbed\obs). It:
     1. installs the freshly built rws-preflight.dll into the portable OBS (Multistream removed),

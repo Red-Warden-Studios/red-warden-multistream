@@ -80,7 +80,7 @@ QString mmss(int64_t ms)
 // .testbed\ through RWS_MULTISTREAM_* environment variables. Those hooks take
 // screenshots and can save imported destinations, so they only switch on for an
 // OBS running from a .testbed folder: an environment variable alone can never
-// change a real user's profile. Codex review, 2026-10-02.
+// change a real user's profile.
 bool testHooksEnabled()
 {
 	static const bool on =
@@ -939,7 +939,7 @@ void MultistreamDock::takeSnapshot()
 		return;
 	// processEvents() below can run OBS's whole shutdown re-entrantly (the
 	// harness closes OBS on a timer) and delete this dock under us: check after
-	// every pump. Seen 2026-10-02 as an intermittent heap-corruption exit.
+	// every pump; without it the plugin can exit with heap corruption.
 	QPointer<MultistreamDock> self(this);
 	QDir().mkpath(snapshotDir);
 	refreshAll(); // headline and rows from the same moment

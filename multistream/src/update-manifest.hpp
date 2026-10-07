@@ -41,7 +41,7 @@ bool parseManifest(const QByteArray &json, Manifest *out);
 // version and one update notice. Both plugins compare the manifest's "latest"
 // against the KIT version, not their own. BOTH PLUGINS MUST AGREE on this value
 // (red-warden-multistream/src and red-warden-preflight/src carry the same line).
-constexpr const char *kKitVersion = "1.0.0";
+constexpr const char *kKitVersion = "1.0.1";
 constexpr const char *kKitHost = "redwardenstudios.com";
 constexpr const char *kKitManifestPath = "/updates/stream-kit.json";
 

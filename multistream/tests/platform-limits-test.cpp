@@ -47,7 +47,7 @@ int main()
 	      "Facebook limits including tallest resolution");
 	CHECK(parseServiceLimits(QByteArray("nonsense")).empty(), "unreadable file yields nothing");
 
-	// Andrew's setup: shared encoder, 6000 kbps, 256 kbps audio, 1080p60, auto keyframes.
+	// Typical setup: shared encoder, 6000 kbps, 256 kbps audio, 1080p60, auto keyframes.
 	StreamFacts f;
 	f.shared = true;
 	f.videoKbps = 6000;

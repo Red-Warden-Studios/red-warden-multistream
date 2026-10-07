@@ -10,6 +10,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 #include "dock-ui.hpp"
 #include "obs-audio.hpp"
 #include "platforms.hpp"
+#include "server-url.hpp"
 
 #include <obs.h>
 
@@ -355,7 +356,7 @@ void EditDialog::validate()
 		err = QStringLiteral("Remove the username/password from the server URL. Only the server goes here.");
 	else if (const QString k = keyEdit->text().trimmed().isEmpty() ? creds::loadKey(base.id)
 								      : keyEdit->text().trimmed();
-		 k.size() >= 8 && (server.contains(k) || QUrl::fromPercentEncoding(server.toUtf8()).contains(k)))
+		 serverUrlContainsKey(server, k))
 		err = QStringLiteral("Your stream key is in the server URL. Put only the server here and the key below.");
 	else if (property("needsKey").toBool() && keyEdit->text().trimmed().isEmpty())
 		err = QStringLiteral("Paste your stream key.");

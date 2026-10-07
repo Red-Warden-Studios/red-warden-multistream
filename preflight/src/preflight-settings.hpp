@@ -33,7 +33,7 @@ struct Settings {
 	bool checkCustom = true;
 
 	QStringList customItems;
-	bool updateChecks = true; // the update notice off switch (key "check_updates", written since slice 1)
+	bool updateChecks = true; // the update notice off switch (key "check_updates")
 
 	// Defaults when the file is missing or unreadable. UI thread; needs the module loaded
 	// (obs_module_config_path).
