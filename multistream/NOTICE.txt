@@ -1,0 +1,21 @@
+Red Warden Multistream
+Copyright (C) 2026 Red Warden Studios LLC
+
+This program is free software: you can redistribute it and/or modify it under the terms
+of the GNU General Public License as published by the Free Software Foundation, either
+version 2 of the License, or (at your option) any later version. See LICENSE.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Source code: published alongside every release (see the project page below).
+Project page: https://redwardenstudios.com/division/bastion/
+
+TRADEMARKS
+"Red Warden", "Red Warden Studios", "Red Warden Multistream" and the Red Warden logos and
+emblems are trademarks of Red Warden Studios LLC. The GPL licenses this code; it does not
+grant any right to use these names or logos. If you distribute a modified version, give it
+a different name and remove the logos so nobody mistakes it for ours.
+
+OBS Studio is a trademark of its respective owners. This plugin is not made or endorsed by
+the OBS Project.
